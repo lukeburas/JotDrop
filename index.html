@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>JotDrop</title>
+  <meta name="description" content="Paste notes you texted yourself and turn them into Google Tasks and Calendar events.">
+  <meta name="theme-color" content="#f4f1ea" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#141413" media="(prefers-color-scheme: dark)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="JotDrop">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img src="icons/icon-192.png" alt="" width="28" height="28">
+      <span>JotDrop</span>
+    </div>
+    <button id="openSettings" class="icon-btn" aria-label="Settings" title="Settings">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6a.5.5 0 0 0 .1-.6l-2-3.5a.5.5 0 0 0-.6-.2l-2.5 1a7.4 7.4 0 0 0-1.7-1l-.4-2.6a.5.5 0 0 0-.5-.4h-4a.5.5 0 0 0-.5.4l-.4 2.6c-.6.3-1.2.6-1.7 1l-2.5-1a.5.5 0 0 0-.6.2l-2 3.5a.5.5 0 0 0 .1.6L4.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6a.5.5 0 0 0-.1.6l2 3.5c.1.2.4.3.6.2l2.5-1c.5.4 1.1.7 1.7 1l.4 2.6c0 .2.3.4.5.4h4c.2 0 .5-.2.5-.4l.4-2.6c.6-.3 1.2-.6 1.7-1l2.5 1c.2.1.5 0 .6-.2l2-3.5a.5.5 0 0 0-.1-.6L19.4 13ZM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/></svg>
+    </button>
+  </header>
+
+  <main>
+    <section id="setupNudge" class="nudge" hidden>
+      <p><strong>One-time setup:</strong> connect your Google account bridge in settings before adding anything.</p>
+      <button class="btn small" data-open-settings>Open settings</button>
+    </section>
+
+    <section class="compose">
+      <label for="input" class="label">Paste what you jotted down</label>
+      <textarea id="input" rows="7" placeholder="dentist tmrw 3pm&#10;bring insurance card&#10;call mom&#10;- ask about sunday&#10;oil change, return package"></textarea>
+      <div class="compose-row">
+        <button id="pasteBtn" class="btn ghost" type="button">Paste</button>
+        <button id="parseBtn" class="btn primary" type="button">Split into items</button>
+      </div>
+      <p id="methodHint" class="hint"></p>
+      <details class="tips">
+        <summary>No AI? How to jot so it splits right</summary>
+        <ul>
+          <li>One item per line.</li>
+          <li>Extra detail for the item above: start the line with a space, <code>-</code>, <code>•</code> or <code>&gt;</code>. It becomes that item's notes.</li>
+          <li>Or leave a blank line between items. Every line inside a group then stays one item (first line is the title).</li>
+          <li>All on one line? Commas split it.</li>
+          <li>A time like "3pm" or "at 5" makes it an event. A day like "fri" or "10/20" becomes the due date.</li>
+        </ul>
+      </details>
+    </section>
+
+    <section id="review" hidden>
+      <div class="review-head">
+        <div>
+          <p id="methodBadge" class="badge"></p>
+          <p id="aiError" class="warn" hidden></p>
+        </div>
+        <div class="resplit" role="group" aria-label="Split a different way">
+          <span class="hint">Split again by:</span>
+          <button class="chip" data-resplit="auto">AI / auto</button>
+          <button class="chip" data-resplit="lines">Lines</button>
+          <button class="chip" data-resplit="blocks">Blank lines</button>
+          <button class="chip" data-resplit="commas">Commas</button>
+        </div>
+      </div>
+      <div id="list"></div>
+      <button id="addItem" class="btn ghost wide" type="button">+ Add an item</button>
+    </section>
+  </main>
+
+  <footer id="actionBar" class="action-bar" hidden>
+    <button id="clearBtn" class="btn ghost" type="button">Clear</button>
+    <button id="createBtn" class="btn primary grow" type="button">Add to Google</button>
+  </footer>
+
+  <dialog id="settings">
+    <form method="dialog" class="sheet">
+      <div class="sheet-head">
+        <h2>Settings</h2>
+        <button class="icon-btn" value="close" aria-label="Close">✕</button>
+      </div>
+
+      <fieldset>
+        <legend>Google (Apps Script bridge)</legend>
+        <label>Web app URL
+          <input id="sBridgeUrl" type="url" inputmode="url" autocomplete="off" placeholder="https://script.google.com/macros/s/…/exec">
+        </label>
+        <label>Secret
+          <span class="with-btn">
+            <input id="sSecret" type="password" autocomplete="off" placeholder="From the setup() log">
+            <button type="button" class="btn small ghost" data-toggle-pw="sSecret">Show</button>
+          </span>
+        </label>
+        <button id="testBridge" type="button" class="btn small">Test &amp; load my lists</button>
+        <p id="bridgeStatus" class="hint"></p>
+        <label>Task list
+          <select id="sTaskList"><option value="@default">My Tasks (default)</option></select>
+        </label>
+        <label>Calendar
+          <select id="sCalendar"><option value="primary">Main calendar</option></select>
+        </label>
+        <label>Event length when no end time (minutes)
+          <input id="sEventMinutes" type="number" min="5" max="600" step="5" inputmode="numeric">
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>AI splitting</legend>
+        <label>Provider
+          <select id="sProvider"></select>
+        </label>
+        <div id="aiFields">
+          <label>API key
+            <span class="with-btn">
+              <input id="sApiKey" type="password" autocomplete="off" placeholder="Paste your key">
+              <button type="button" class="btn small ghost" data-toggle-pw="sApiKey">Show</button>
+            </span>
+          </label>
+          <p id="keyHelp" class="hint"></p>
+          <label>Model
+            <input id="sModel" type="text" autocomplete="off" spellcheck="false">
+          </label>
+          <button id="testAi" type="button" class="btn small">Test AI</button>
+          <p id="aiStatus" class="hint"></p>
+        </div>
+        <p class="hint">If AI is off, has no key, or fails, JotDrop splits by new lines, then commas.</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Move settings to another device</legend>
+        <p class="hint">On iPhone, the home screen app and Safari keep separate settings. This code carries everything over, including your keys, so treat it like a password.</p>
+        <div class="row">
+          <button id="copySettings" type="button" class="btn small ghost">Copy settings code</button>
+          <button id="pasteSettings" type="button" class="btn small ghost">Paste settings code</button>
+        </div>
+      </fieldset>
+
+      <p class="hint fine">Keys and settings stay in this browser only. Notes go straight from this device to your AI provider and your own Apps Script.</p>
+    </form>
+  </dialog>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
