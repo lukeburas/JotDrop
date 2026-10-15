@@ -1,5 +1,5 @@
 // JotDrop service worker: keeps the app opening offline. API calls always go to the network.
-const VERSION = 'jotdrop-v1';
+const VERSION = 'jotdrop-v2';
 const SHELL = ['./', 'index.html', 'app.js', 'styles.css', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 
 self.addEventListener('install', (e) => {

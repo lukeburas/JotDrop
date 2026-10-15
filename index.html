@@ -4,9 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>JotDrop</title>
+  <!--pwa-->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com https://script.googleusercontent.com https://api.anthropic.com https://api.openai.com https://generativelanguage.googleapis.com; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'">
   <meta name="description" content="Paste notes you texted yourself and turn them into Google Tasks and Calendar events.">
-  <meta name="theme-color" content="#f4f1ea" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#141413" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f4f1ea">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="JotDrop">
@@ -14,6 +15,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <!--/pwa-->
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -28,6 +30,20 @@
   </header>
 
   <main>
+    <section id="loading" class="nudge" hidden><p>Connecting to your Google account…</p></section>
+    <section id="fatal" class="nudge error" hidden></section>
+
+    <section id="welcome" class="welcome" hidden>
+      <h2>Welcome to JotDrop</h2>
+      <ol>
+        <li>Type or paste your notes in the box. One thing per line is easiest.</li>
+        <li>Tap <strong>Split into items</strong> and check that each one looks right.</li>
+        <li>Tap <strong>Add</strong>. They show up in your Google Calendar and Google Tasks.</li>
+      </ol>
+      <p class="hint"><strong>Keep it on your home screen:</strong> on iPhone tap the Share button, then <em>Add to Home Screen</em>. On Android tap the ⋮ menu, then <em>Add to Home screen</em>.</p>
+      <button id="welcomeOk" class="btn primary" type="button">Got it</button>
+    </section>
+
     <section id="setupNudge" class="nudge" hidden>
       <p><strong>One-time setup:</strong> connect your Google account bridge in settings before adding anything.</p>
       <button class="btn small" data-open-settings>Open settings</button>
@@ -35,7 +51,7 @@
 
     <section class="compose">
       <label for="input" class="label">Paste what you jotted down</label>
-      <textarea id="input" rows="7" placeholder="dentist tmrw 3pm&#10;bring insurance card&#10;call mom&#10;- ask about sunday&#10;oil change, return package"></textarea>
+      <textarea id="input" rows="7" placeholder="dentist tmrw 3pm&#10;bring insurance card&#10;call mom !!!&#10;- ask about sunday&#10;oil change, return package"></textarea>
       <div class="compose-row">
         <button id="pasteBtn" class="btn ghost" type="button">Paste</button>
         <button id="parseBtn" class="btn primary" type="button">Split into items</button>
@@ -49,6 +65,7 @@
           <li>Or leave a blank line between items. Every line inside a group then stays one item (first line is the title).</li>
           <li>All on one line? Commas split it.</li>
           <li>A time like "3pm" or "at 5" makes it an event. A day like "fri" or "10/20" becomes the due date.</li>
+          <li>Priority: <code>!!!</code> or <code>p1</code> = high, <code>!!</code> or <code>p2</code> = medium, <code>p3</code> = low. Words like "urgent" or "someday" work too.</li>
         </ul>
       </details>
     </section>
@@ -84,7 +101,13 @@
         <button class="icon-btn" value="close" aria-label="Close">✕</button>
       </div>
 
-      <fieldset>
+      <fieldset id="fsAccount" hidden>
+        <legend>Your account</legend>
+        <p id="accountLine" class="hint"></p>
+        <p class="hint">Your settings and AI key are saved to your Google account, so they follow you to any device.</p>
+      </fieldset>
+
+      <fieldset id="fsBridge">
         <legend>Google (Apps Script bridge)</legend>
         <label>Web app URL
           <input id="sBridgeUrl" type="url" inputmode="url" autocomplete="off" placeholder="https://script.google.com/macros/s/…/exec">
@@ -97,6 +120,10 @@
         </label>
         <button id="testBridge" type="button" class="btn small">Test &amp; load my lists</button>
         <p id="bridgeStatus" class="hint"></p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Where things go</legend>
         <label>Task list
           <select id="sTaskList"><option value="@default">My Tasks (default)</option></select>
         </label>
@@ -106,6 +133,52 @@
         <label>Event length when no end time (minutes)
           <input id="sEventMinutes" type="number" min="5" max="600" step="5" inputmode="numeric">
         </label>
+        <label class="inline"><input id="sPairTasks" type="checkbox"> Also add each event to my task list, so I can check it off</label>
+        <p class="hint">You can still switch this on or off for any single event before adding.</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Priority colors</legend>
+        <p class="hint">Events get the color on Google Calendar. Google Tasks can't be colored, so tasks get a matching colored dot at the start of the title.</p>
+        <div id="paletteList" class="pal-list" role="radiogroup" aria-label="Priority color scheme"></div>
+        <details id="customColors" class="custom">
+          <summary>Pick my own colors</summary>
+          <p class="hint">Google Calendar only has 11 event colors. Any color you pick stays exact in this app and uses the closest of the 11 on your calendar.</p>
+          <div id="levelEditors"></div>
+        </details>
+        <label>Starting priority for new items
+          <select id="sDefaultPriority">
+            <option value="none">None</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </label>
+        <label class="inline"><input id="sTaskDots" type="checkbox"> Put a colored dot on task titles</label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Look</legend>
+        <div id="themeList" class="theme-list" role="radiogroup" aria-label="App color scheme"></div>
+        <label>Light or dark
+          <select id="sMode">
+            <option value="auto">Match my device</option>
+            <option value="light">Always light</option>
+            <option value="dark">Always dark</option>
+          </select>
+        </label>
+        <label>Button color
+          <span class="with-btn">
+            <input id="sAccent" type="color" aria-label="Button color">
+            <button id="resetAccent" type="button" class="btn small ghost">Use theme color</button>
+          </span>
+        </label>
+        <label>Text size
+          <select id="sTextSize">
+            <option value="normal">Normal</option>
+            <option value="large">Large</option>
+          </select>
+        </label>
       </fieldset>
 
       <fieldset>
@@ -114,14 +187,20 @@
           <select id="sProvider"></select>
         </label>
         <div id="aiFields">
-          <label>API key
-            <span class="with-btn">
-              <input id="sApiKey" type="password" autocomplete="off" placeholder="Paste your key">
-              <button type="button" class="btn small ghost" data-toggle-pw="sApiKey">Show</button>
-            </span>
-          </label>
-          <p id="keyHelp" class="hint"></p>
-          <label>Model
+          <div id="keyBox">
+            <label>API key
+              <span class="with-btn">
+                <input id="sApiKey" type="password" autocomplete="off" placeholder="Paste your key">
+                <button type="button" class="btn small ghost" data-toggle-pw="sApiKey">Show</button>
+              </span>
+            </label>
+            <div class="row" id="keyActions" hidden>
+              <button id="saveKey" type="button" class="btn small">Save key</button>
+              <button id="removeKey" type="button" class="btn small ghost">Remove key</button>
+            </div>
+            <p id="keyHelp" class="hint"></p>
+          </div>
+          <label id="modelBox">Model
             <input id="sModel" type="text" autocomplete="off" spellcheck="false">
           </label>
           <button id="testAi" type="button" class="btn small">Test AI</button>
@@ -130,7 +209,30 @@
         <p class="hint">If AI is off, has no key, or fails, JotDrop splits by new lines, then commas.</p>
       </fieldset>
 
-      <fieldset>
+      <fieldset id="fsFamilyAi" hidden>
+        <legend>Family AI (owner only)</legend>
+        <p class="hint">Lets everyone using your link pick "Family AI" without their own key. Usage is billed to this key. The key stays on Google's servers and is never sent to anyone's phone.</p>
+        <label>Provider
+          <select id="fProvider">
+            <option value="claude">Claude (Anthropic)</option>
+            <option value="openai">ChatGPT (OpenAI)</option>
+            <option value="gemini">Gemini (Google)</option>
+          </select>
+        </label>
+        <label>API key
+          <input id="fKey" type="password" autocomplete="off" placeholder="Leave blank to keep the saved key">
+        </label>
+        <label>Model
+          <input id="fModel" type="text" autocomplete="off" spellcheck="false">
+        </label>
+        <div class="row">
+          <button id="fSave" type="button" class="btn small">Save family AI</button>
+          <button id="fClear" type="button" class="btn small ghost">Turn off</button>
+        </div>
+        <p id="fStatus" class="hint"></p>
+      </fieldset>
+
+      <fieldset id="fsMove">
         <legend>Move settings to another device</legend>
         <p class="hint">On iPhone, the home screen app and Safari keep separate settings. This code carries everything over, including your keys, so treat it like a password.</p>
         <div class="row">
@@ -139,7 +241,7 @@
         </div>
       </fieldset>
 
-      <p class="hint fine">Keys and settings stay in this browser only. Notes go straight from this device to your AI provider and your own Apps Script.</p>
+      <p id="privacyLine" class="hint fine">Keys and settings stay in this browser only. Notes go straight from this device to your AI provider and your own Apps Script.</p>
     </form>
   </dialog>
 
