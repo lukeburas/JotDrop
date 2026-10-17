@@ -1,0 +1,121 @@
+
+# JotDrop
+
+**Get it out of your head. Get it into your calendar.**
+
+> **Status: Currently in Development**
+>
+> JotDrop is a working prototype that I currently use for personal productivity. The application functions as intended for my own Google accounts, but it isn't quite ready for public use.
+>
+> Setting it up for another Google account currently requires additional technical steps, including creating and importing Google Apps Script code, configuring authentication IDs, and granting the necessary permissions.
+>
+> I'm continuing development with the goal of making JotDrop accessible to others without requiring them to go through these steps.
+
+## Why I Built JotDrop
+
+Recently, I've found myself texting reminders to myself or even a friend just so I don't forget things I need to do.
+
+I usually separate everything by line, something like:
+
+```text
+Fill out applications
+Complete new project and document it for project portfolio
+Dance like crazy
+```
+
+One morning, I remember thinking:
+
+*"I wish I could just copy and paste these messages directly into Google Calendar and Tasks to save myself some time."*
+
+I've always found organizing calendars and to-do lists tedious. I don't particularly enjoy spending time opening Google Calendar, creating an event, choosing a date, saving it, switching to Google Tasks, and repeating the process for everything else on my mind.
+
+But as someone with ADHD, keeping track of everything without writing it down is incredibly difficult for me.
+
+I need to get my thoughts out of my head and somewhere I can reliably reference them later. The problem is that actually organizing those thoughts into a calendar or task management system takes time and effort.
+
+Sometimes I'll have several things I want to accomplish, but the process of organizing them becomes another task in itself.
+
+That's what led me to create **JotDrop**.
+
+I wanted something that worked with how I already write reminders, without requiring me to completely change my habits.
+
+## What JotDrop Does
+
+JotDrop is a lightweight web application that takes unstructured notes and turns them into organized entries for Google Calendar and Google Tasks.
+
+Instead of manually creating each calendar event or task, I can write everything down in one place, let the application separate the entries, review them, and upload everything with a single button.
+
+### Quick Notes and Automatic Organization
+
+One of my favorite features is how easily I can enter multiple tasks.
+
+I personally prefer separating each thought by line, just like I would when texting someone a list of reminders.
+
+JotDrop can process these notes, distinguish individual entries, and organize them for review.
+
+I can also include additional information or notes without needing to manually create a separate entry for everything.
+
+The goal is to make entering tasks as natural as writing down whatever comes to mind.
+
+### Google Calendar and Google Tasks Integration
+
+Once JotDrop has organized the entries, I can review them and add them to Google Calendar and Google Tasks in one workflow.
+
+I also implemented an option to **duplicate Google Calendar events as Google Tasks**.
+
+For example, if I schedule time to work on a project, I can have that event appear on my calendar while also creating a corresponding task that I can check off when it's completed.
+
+This helps me keep track of both what I've scheduled and what I've actually accomplished.
+
+### Customizable UI Themes and Priority Flags
+
+I wanted JotDrop to feel personal, so I spent time building a customizable interface.
+
+The application includes:
+
+- Customizable UI themes with different color combinations.
+- Color-coded priority flags to visually distinguish important entries.
+- Appearance customization to suit individual preferences.
+- An interface designed to make organizing tasks and events more comfortable.
+
+Everyone organizes information differently, and I wanted to give users some freedom in how their workspace looks and feels.
+
+## How I Built It
+
+I developed JotDrop as a web-based application with a lightweight frontend for entering, reviewing, and organizing notes.
+
+For the backend, I created a **Google Apps Script** that handles the integration with Google Calendar and Google Tasks.
+
+The script allows JotDrop to communicate with Google's services and create the corresponding entries.
+
+I built the application around my own productivity habits and continued refining the interface as I found things that could make the process easier.
+
+One of my main priorities was reducing the number of individual steps required to organize everything.
+
+## Current Development Status
+
+JotDrop currently works as intended for my personal use.
+
+However, it's still a prototype, and getting it working with additional Google accounts requires manual configuration of Google Apps Script, authentication credentials, and account permissions.
+
+I want to refine that process before making the application publicly available.
+
+For now, this repository serves primarily as documentation of my personal project and its continued development.
+
+## Future Plans
+
+My immediate goal is to finish refining the Google integration and simplify the process of connecting additional accounts.
+
+Once the Google version is polished, I'd also like to expand JotDrop into **Microsoft environments**, potentially supporting Microsoft Outlook Calendar and Microsoft To Do.
+
+I'd eventually like JotDrop to become something anyone can use to quickly turn their thoughts into organized tasks and calendar entries, regardless of which ecosystem they prefer.
+
+## Final Thoughts
+
+JotDrop started because I was tired of spending more time organizing my to-do lists than I felt was necessary.
+
+I already had a habit of writing everything down. I just wanted a faster way to turn those notes into something useful.
+
+It's a relatively simple idea, but solving a problem I personally deal with has made this one of my more meaningful projects.
+
+I'm continuing to develop it as I discover new ways to improve the workflow.
